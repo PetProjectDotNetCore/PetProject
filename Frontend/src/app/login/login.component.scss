@@ -1,0 +1,33 @@
+.login-body {
+	margin:auto;
+	width:300px;
+}
+
+.btn-primary {
+	margin: auto;
+	width: 50%;
+	margin-left: 25%;
+}
+
+.form-control {
+	width: 200px;
+	margin-bottom: 10px;
+	float: right;
+}
+
+label {
+	float: left;
+	margin-bottom: 12px;
+}
+
+.login-logo {
+	width:500px;
+	margin-left:-100px;
+}
+
+.errors {
+	color: #ff0000;
+	overflow:auto;
+	height: 30px;
+	width:300px;
+}

@@ -1,6 +1,6 @@
 using System;
 
-namespace PetProject.Web.API
+namespace PetProject.Web.API.Models.DTOs
 {
 	public class WeatherForecast
 	{

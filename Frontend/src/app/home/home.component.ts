@@ -14,8 +14,17 @@ export class HomeComponent implements OnInit {
 	}
 	
 	refreshToken() {
-		this.loginService.refreshToken();
-	}
+		this.loginService.refreshToken()
+			.subscribe(
+				success => {
+					if (success) {
+						alert('OK');
+					}
+				},
+				error => {
+					console.log(error)
+				});
+}
 
 	logout() {
 		this.loginService.logout();

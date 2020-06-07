@@ -51,29 +51,57 @@ namespace PetProject.Web.API.Controllers
         {
             if (!HttpContext.Request.Cookies.TryGetValue("refreshToken", out string refreshToken))
             {
-                return BadRequest(new { message = "RefreshToken as a cookie is expected." });
+                return BadRequest("RefreshToken as a cookie is expected.");
             }
+			if (string.IsNullOrWhiteSpace(accessToken?.AccessToken))
+			{
+				return BadRequest("AccessToken is expected.");
+			}
 
-            var dto = _jwtService.RefreshTokens(accessToken.AccessToken, refreshToken);
+			var dto = _jwtService.RefreshTokens(accessToken.AccessToken, refreshToken);
 
             WriteCookie(dto.RefreshToken);
 
             return Ok(new
             {
                 Token = dto.AccessToken,
-                refreshToken.Expires
+				dto.RefreshToken.Expires
             });
         }
 
-        private void WriteCookie(RefreshToken refreshToken)
+		[HttpGet]
+		[Route("refreshToken/{id}")]
+		public IActionResult RefreshToken(string id)
+		{
+			if (!HttpContext.Request.Cookies.TryGetValue("refreshToken", out string refreshToken))
+			{
+				return BadRequest("RefreshToken as a cookie is expected.");
+			}
+			if (string.IsNullOrWhiteSpace(id))
+			{
+				return BadRequest("AccessToken is expected.");
+			}
+
+			var dto = _jwtService.RefreshTokens(id, refreshToken);
+
+			WriteCookie(dto.RefreshToken);
+
+			return Ok(new
+			{
+				Token = dto.AccessToken,
+				dto.RefreshToken.Expires
+			});
+		}
+
+		private void WriteCookie(RefreshToken refreshToken)
         {
             HttpContext.Response.Cookies.Append("refreshToken", refreshToken.Token, new CookieOptions
             {
                 HttpOnly = true,
-                SameSite = SameSiteMode.Strict,
-                Path = "refresh",
+                //SameSite = SameSiteMode.Strict,
+                //Path = "/login/refresh",
                 Secure = true,
-                Expires = new System.DateTimeOffset(refreshToken.Expires)
+                //Expires = new System.DateTimeOffset(refreshToken.Expires)
             });
         }
     }

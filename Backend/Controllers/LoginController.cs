@@ -23,9 +23,11 @@ namespace PetProject.Web.API.Controllers
             var user = _loginService.Authenticate(model.Email, model.Password);
 
             if (user == null)
-                return BadRequest(new { message = "Email or password is incorrect" });
+			{
+				return BadRequest(new { message = "Email or password is incorrect" });
+			}
 
-            var token = _jwtService.GenerateAccessToken(user);
+			var token = _jwtService.GenerateAccessToken(user);
             var refreshToken = _jwtService.GenerateRefreshToken(user);
 
             return Ok(new

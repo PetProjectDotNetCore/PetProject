@@ -11,7 +11,12 @@ export class HomeComponent implements OnInit {
 	constructor(private loginService: LoginService) { }
 
   ngOnInit(): void {
-  }
+	}
+	
+	refreshToken() {
+		this.loginService.refreshToken();
+	}
+
 	logout() {
 		this.loginService.logout();
 	}

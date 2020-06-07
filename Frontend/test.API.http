@@ -1,0 +1,13 @@
+#############################################
+### health check
+GET http://localhost:5001/health HTTP/1.1
+Content-Type: application/json; charset=UTF-8
+#############################################
+### login
+GET https://localhost:5001/login/authenticate HTTP/1.1
+Content-Type: application/json; charset=UTF-8
+{"email":"IvanovIvan@gmail.com","password":"qwerty"}
+#############################################
+### Query 4 - hangfire job
+GET http://localhost:5001/HangfireTest HTTP/1.1
+Content-Type: application/json; charset=UTF-8

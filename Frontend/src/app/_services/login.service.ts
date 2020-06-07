@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { User}  from '../_models/user.model'
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
@@ -11,26 +11,45 @@ import { environment } from '../../environments/environment';
 export class LoginService {
 
 	private userSubject: BehaviorSubject<User>;
-	public user: Observable<User>;
+	private token: String;
 
 	constructor(
 		private router: Router,
 		private http: HttpClient
 	) {
 		this.userSubject = new BehaviorSubject<User>(JSON.parse(localStorage.getItem('user')));
-		this.user = this.userSubject.asObservable();
 	}
 
 	public get userValue(): User {
 		return this.userSubject.value;
 	}
 
-	login(email, password) {
+	login(email, password): Observable<Boolean> {
 		return this.http.post<User>(`${environment.apiUrl}/login/authenticate`, { email, password })
 			.pipe(map(user => {
+				this.token = user.token;
+				user.token = '';
 				localStorage.setItem('user', JSON.stringify(user));
 				this.userSubject.next(user);
-				return user;
+				return true;
+			}));
+	}
+
+	refreshToken(): Observable<Boolean> {
+		var refreshTokenExpires = new Date(this.userSubject.value.expires);
+		if (!this.token || refreshTokenExpires < new Date(Date.now())) {
+			this.logout();
+			return of(false);
+		}
+
+		return this.http.post<User>(`${environment.apiUrl}/login/refresh`, { accessToken: this.token })
+			.pipe(map(response => {
+				this.token = response.token;
+				var user = this.userSubject.value;
+				user.expires = response.expires;
+				localStorage.setItem('user', JSON.stringify(user));
+				this.userSubject.next(user);
+				return true;
 			}));
 	}
 

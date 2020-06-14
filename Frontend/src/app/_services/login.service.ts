@@ -25,7 +25,7 @@ export class LoginService {
 	}
 
 	login(email, password): Observable<Boolean> {
-		return this.http.post<User>(`${environment.apiUrl}/login/authenticate`, { email, password })
+		return this.http.post<User>(`${environment.apiUrl}/login/authenticate`, { email, password }, { withCredentials: true })
 			.pipe(map(user => {
 				this.token = user.token;
 				user.token = '';
@@ -41,17 +41,7 @@ export class LoginService {
 			this.logout();
 			return of(false);
 		}
-		/*
-		return this.http.get<User>(`${environment.apiUrl}/login/refreshToken/${this.token}`, { withCredentials: true })
-			.pipe(map(dto => {
-				this.token = dto.token;
-				var user = this.userSubject.value;
-				user.expires = dto.expires;
-				localStorage.setItem('user', JSON.stringify(user));
-				this.userSubject.next(user);
-				return true;
-			}));
-		*/
+
 		return this.http.post<User>(`${environment.apiUrl}/login/refresh`, { accessToken: this.token }, { withCredentials: true })
 			.pipe(map(dto => {
 				this.token = dto.token;

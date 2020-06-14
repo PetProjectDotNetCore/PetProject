@@ -6,11 +6,12 @@ using PetProject.Web.API.Models.Entities;
 
 namespace PetProject.Web.API.Controllers
 {
-    [ApiController]
+	[ApiController]
     [Route("[controller]")]
     public class LoginController : ControllerBase
     {
-        private readonly ILoginService _loginService;
+		private const string COOKIE_NAME = "PetProject.RefreshToken";
+		private readonly ILoginService _loginService;
         private readonly IJwtService _jwtService;
 
         public LoginController(ILoginService loginService, IJwtService jwtService)
@@ -20,7 +21,7 @@ namespace PetProject.Web.API.Controllers
         }
 
         [HttpPost("authenticate")]
-        public IActionResult Authenticate([FromBody]AuthenticateModel model)
+		public IActionResult Authenticate([FromBody]AuthenticateModel model)
         {
             var user = _loginService.Authenticate(model.Email, model.Password);
 
@@ -49,7 +50,7 @@ namespace PetProject.Web.API.Controllers
         [Route("refresh")]
         public IActionResult Refresh([FromBody] RefreshTokenDto accessToken)
         {
-            if (!HttpContext.Request.Cookies.TryGetValue("refreshToken", out string refreshToken))
+            if (!HttpContext.Request.Cookies.TryGetValue(COOKIE_NAME, out string refreshToken))
             {
                 return BadRequest("RefreshToken as a cookie is expected.");
             }
@@ -69,40 +70,16 @@ namespace PetProject.Web.API.Controllers
             });
         }
 
-		[HttpGet]
-		[Route("refreshToken/{id}")]
-		public IActionResult RefreshToken(string id)
-		{
-			if (!HttpContext.Request.Cookies.TryGetValue("refreshToken", out string refreshToken))
-			{
-				return BadRequest("RefreshToken as a cookie is expected.");
-			}
-			if (string.IsNullOrWhiteSpace(id))
-			{
-				return BadRequest("AccessToken is expected.");
-			}
-
-			var dto = _jwtService.RefreshTokens(id, refreshToken);
-
-			WriteCookie(dto.RefreshToken);
-
-			return Ok(new
-			{
-				Token = dto.AccessToken,
-				dto.RefreshToken.Expires
-			});
-		}
-
 		private void WriteCookie(RefreshToken refreshToken)
         {
-            HttpContext.Response.Cookies.Append("refreshToken", refreshToken.Token, new CookieOptions
+            HttpContext.Response.Cookies.Append(COOKIE_NAME, refreshToken.Token, new CookieOptions
             {
                 HttpOnly = true,
-                //SameSite = SameSiteMode.Strict,
-                //Path = "/login/refresh",
+                SameSite = SameSiteMode.Strict,
+                Path = "/login",
                 Secure = true,
-                //Expires = new System.DateTimeOffset(refreshToken.Expires)
+                Expires = new System.DateTimeOffset(refreshToken.Expires)
             });
-        }
-    }
+		}
+	}
 }

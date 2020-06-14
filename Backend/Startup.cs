@@ -27,7 +27,12 @@ namespace PetProject.Web.API
             services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddCors();
+            services.AddCors(options => options.AddPolicy("local-angular", builder => builder
+				.WithOrigins("http://localhost:4200")
+				.WithMethods("POST")
+				.AllowAnyHeader()
+				.AllowCredentials()));
+
             services.AddControllers();
 
             var jwtSection = Configuration.GetSection("Jwt");
@@ -49,19 +54,15 @@ namespace PetProject.Web.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }
+				app.UseCors("local-angular");
+			}
 
-            dataContext.Database.Migrate();
+			dataContext.Database.Migrate();
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            // global cors policy
-            app.UseCors(x => x
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader());
 
             app.UseAuthentication();
             app.UseAuthorization();

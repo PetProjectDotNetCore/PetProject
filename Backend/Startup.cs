@@ -31,7 +31,11 @@ namespace PetProject.Web.API
 				.WithOrigins("http://localhost:4200")
 				.WithMethods("POST")
 				.AllowAnyHeader()
-				.AllowCredentials()));
+				.AllowCredentials()
+				// AllowCredentials() => set Access-Control-Allow-Credentials header, which tells the browser that the server allows credentials for a cross-origin request.
+				// You need it if you use "withCredentials = true" in XMLHttpRequest.
+				// https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-3.1#set-the-allowed-origins
+			));
 
             services.AddControllers();
 

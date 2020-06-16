@@ -36,7 +36,7 @@ namespace PetProject.Web.API.Services
                     new Claim(ClaimTypes.Email, user.Email),
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
                 }),
-                Expires = DateTime.UtcNow.AddDays(_jwtSettings.ExpirationInMinutes),
+                Expires = DateTime.UtcNow.AddDays(_jwtSettings.AccessTokenExpirationInMinutes),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -45,24 +45,26 @@ namespace PetProject.Web.API.Services
             return tokenHandler.WriteToken(token);
         }
 
-        public string GenerateRefreshToken(User user)
+        public RefreshToken GenerateRefreshToken(User user)
         {
+            RemoveRefreshTokens(user.Id);
+
             var refreshToken = new RefreshToken
             {
                 Token = GenerateRefreshToken(),
-                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationInMinutes),
+                Expires = DateTime.UtcNow.AddMinutes(_jwtSettings.RefreshTokenExpirationInMinutes),
                 UserId = user.Id
             };
 
             _context.RefreshTokens.Add(refreshToken);
             _context.SaveChanges();
 
-            return refreshToken.Token;
+            return refreshToken;
         }
 
-        public RefreshTokenDto UpdateRefreshToken(RefreshTokenDto model)
+        public RefreshTokenDto RefreshTokens(string oldAccessToken, string oldRefreshToken)
         {
-            var principal = GetPrincipalFromToken(model.AccessToken, _jwtSettings.Secret);
+            var principal = GetPrincipalFromToken(oldAccessToken, _jwtSettings.Secret);
             var userEmail = principal.FindFirst(ClaimTypes.Email)?.Value;
 
             if (string.IsNullOrEmpty(userEmail))
@@ -77,19 +79,18 @@ namespace PetProject.Web.API.Services
                 throw new Exception("User not found");
             }
 
-            if (!HasValidRefreshToken(model.RefreshToken, user.Id))
+            if (!HasValidRefreshToken(oldRefreshToken, user.Id))
             {
                 throw new Exception("Token is invalid");
             }
 
-            var accessToken = GenerateAccessToken(user);
-            RemoveRefreshToken(model.RefreshToken, user.Id); 
-            var refreshToken = GenerateRefreshToken(user);
+            var newAccessToken = GenerateAccessToken(user);
+            var newRefreshToken = GenerateRefreshToken(user);
 
             return new RefreshTokenDto
             {
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
             };
         }
 
@@ -132,13 +133,13 @@ namespace PetProject.Web.API.Services
             return _context.RefreshTokens.Any(rt => rt.Token == refreshToken && DateTime.UtcNow <= rt.Expires && rt.UserId == userId);
         }
 
-        private void RemoveRefreshToken(string refreshToken, int userId)
-        {
-            var token = _context.RefreshTokens.FirstOrDefault(x => x.UserId == userId && x.Token == refreshToken);
+        private void RemoveRefreshTokens(int userId)
+		{
+            var tokens = _context.RefreshTokens.Where(x => x.UserId == userId).ToList();
 
-            if (token != null)
+            if (tokens.Any())
             {
-                _context.RefreshTokens.Remove(token);
+                _context.RefreshTokens.RemoveRange(tokens);
                 _context.SaveChanges();
             }
         }

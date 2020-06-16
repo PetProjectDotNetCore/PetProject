@@ -4,5 +4,5 @@ export class User {
 	firstName: string;
 	lastName: string;
 	token: string;
-	refreshToken: string;
+	expires: string;
 }

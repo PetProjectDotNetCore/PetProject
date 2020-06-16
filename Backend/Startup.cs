@@ -27,7 +27,16 @@ namespace PetProject.Web.API
             services.AddDbContext<DataContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddCors();
+            services.AddCors(options => options.AddPolicy("local-angular", builder => builder
+				.WithOrigins("http://localhost:4200")
+				.WithMethods("POST")
+				.AllowAnyHeader()
+				.AllowCredentials()
+				// AllowCredentials() => set Access-Control-Allow-Credentials header, which tells the browser that the server allows credentials for a cross-origin request.
+				// You need it if you use "withCredentials = true" in XMLHttpRequest.
+				// https://docs.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-3.1#set-the-allowed-origins
+			));
+
             services.AddControllers();
 
             var jwtSection = Configuration.GetSection("Jwt");
@@ -49,19 +58,15 @@ namespace PetProject.Web.API
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
-            }
+				app.UseCors("local-angular");
+			}
 
-            dataContext.Database.Migrate();
+			dataContext.Database.Migrate();
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
-            // global cors policy
-            app.UseCors(x => x
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader());
 
             app.UseAuthentication();
             app.UseAuthorization();

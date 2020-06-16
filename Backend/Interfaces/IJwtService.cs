@@ -6,7 +6,7 @@ namespace PetProject.Web.API.Interfaces
     public interface IJwtService
     {
         string GenerateAccessToken(User user);
-        string GenerateRefreshToken(User user);
-        RefreshTokenDto UpdateRefreshToken(RefreshTokenDto model);
+        RefreshToken GenerateRefreshToken(User user);
+        RefreshTokenDto RefreshTokens(string accessToken, string refreshToken);
     }
 }
